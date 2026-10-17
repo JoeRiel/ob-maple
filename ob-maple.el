@@ -55,7 +55,7 @@
 (add-to-list 'org-babel-tangle-lang-exts '("maple" . "mpl"))
 
 (defcustom org-babel-maple-command
-  "maple -q -B -c 'interface(prettyprint=0)'"
+  "maple2025 -q -B -c 'interface(prettyprint=0)'"
   "String used to execute Maple code.
 The command (maple) should be the installed name of command-line Maple."
   :group 'org-babel
