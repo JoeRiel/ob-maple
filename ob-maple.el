@@ -5,8 +5,8 @@
 ;; Author: Joseph S. Riel <joer@san.rr.com>
 ;;         Bo Jakobsen <boj@boj.dk>
 ;; Keywords: languages, tools
-;; Version: 0.1.0
-;; Package-Requires: ((maplev "3.2.0"))
+;; Version: 1.0.0
+;; Package-Requires: ((maplev "3.2.5"))
 ;; URL: https://github.com/JoeRiel/ob-maple
 
 ;;; License:
@@ -38,7 +38,8 @@
 (require 'ob-comint)
 (require 'ob-eval)
 (require 'cl-lib)
-;; (require 'maplev)
+(require 'eieio)
+(require 'maplev)
 
 (declare-function maplev-config "maplev-config")
 (declare-function maplev--pmaple-buffer "maplev-pmaple")
@@ -48,11 +49,8 @@
 (defvar maplev-config)
 (defvar maplev-pmaple-prompt)
 
-(defvar org-src-lang-modes)
-(add-to-list 'org-src-lang-modes '("maple" . maplev))
-
-(defvar org-babel-tangle-lang-exts)
-(add-to-list 'org-babel-tangle-lang-exts '("maple" . "mpl"))
+(defvar org-src-lang-modes)         ; updated in .emacs
+(defvar org-babel-tangle-lang-exts) ; updated in .emacs
 
 (defcustom org-babel-maple-command nil
   "Shell command used for one-shot (non-session) Maple evaluation.
