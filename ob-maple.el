@@ -397,23 +397,21 @@ defensive so the result is well-formed under an interactive PTY too."
       (concat "[" (mapconcat #'org-babel-maple--var-to-maple var ", ") "]")
     (format "%S" (if (stringp var) (substring-no-properties var) var))))
 
-(defun org-babel-variable-assignment:maple (param)
+(defun org-babel-maple--variable-assignment (param)
   "Return a string of a Maple assignment to a variable.
-When PARAM has the form `(:var VAR . VALUE)', the string `VAR := VALUE'
+When PARAM has the form `(VAR . VALUE)', the string `VAR := VALUE:'
 is returned."
-  (if (eq (car param) :var)
-      (format "%s := %s;"
-              (cadr param)
-              (org-babel-maple--var-to-maple (cddr param)))))
+  (format "%s := %s:"
+          (car param)
+          (org-babel-maple--var-to-maple (cdr param))))
 
 (defun org-babel-variable-assignments:maple (params)
   "Return a string of Maple statements assigning the header variables.
-Elements of PARAMS with the format \(:var VAR . VALUE\) are
-converted to Maple assignments `VAR := VALUE'."
-  (mapconcat
-   #'org-babel-variable-assignment:maple
-   params "\n"))
-
+Elements of PARAMS with the format (:var VAR . VALUE) are
+converted to silence Maple assignments `VAR := VALUE:'."
+  (mapconcat #'org-babel-maple--variable-assignment
+             (org-babel--get-vars params) "\n"))
+  
 ;; session functions
 
 (defvar org-babel-maple--session-alist nil

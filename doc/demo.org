@@ -102,6 +102,39 @@ int(q*x,x);   # remembers p from the previous block
 : 8
 : 50*x^2
 
+* Parsing in variables
+
+#+begin_src maple :session foo :var a=2 b=5
+  b+a;
+#+end_src
+
+#+RESULTS:
+: 7
+
+* Returning tables
+
+Pure mans table formatting directly from Maple is rendered correctly.
+
+#+begin_src maple :session foo :results output drawer
+  M := Matrix([[1, 2.5, x^2], [3, 4, sin(x)]]):
+  printf("| a | b | c |\n|-\n");
+  for i to LinearAlgebra:-RowDimension(M) do
+    printf("|%s|\n", cat(seq(sprintf(" %a |", M[i,j]),
+                             j = 1..LinearAlgebra:-ColumnDimension(M))));
+  od:
+#+end_src
+
+#+RESULTS:
+:results:
+| a |   b | c      |   |
+|---+-----+--------+---|
+| 1 | 2.5 | x^2    |   |
+| 3 |   4 | sin(x) |   |
+:end:
+
+Currently no full automated table system.
+
+
 * Inline graphics generation and inclusion
 
 Last command in a block needs to be the plot (or a variable contain a plot).
