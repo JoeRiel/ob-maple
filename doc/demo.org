@@ -7,7 +7,7 @@
 This is a demo org / org-babel document, showing (some of) the
 features in the ob-maple org-babel language package.
 
-**Version 1.0**
+**Version 0.1**
 
 The package is currently under development.
 

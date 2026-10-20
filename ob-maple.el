@@ -52,7 +52,7 @@
 (defvar org-src-lang-modes)         ; updated in .emacs
 (defvar org-babel-tangle-lang-exts) ; updated in .emacs
 
-(defconst ob-babel-maple-version "0.1.0"
+(defconst org-babel-maple-version "0.1.0"
   "The current version of the Org Maple package.")
 
 (defcustom org-babel-maple-command nil
