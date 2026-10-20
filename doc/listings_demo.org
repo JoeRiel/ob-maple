@@ -1,0 +1,76 @@
+#+title: Ob-maple org-babel demo document: Using listings for src blocks
+#+date: <2026-10-17 Sat>
+#+email: boj@boj.dk
+#+author: Bo Jakobsen
+#+OPTIONS: toc:nil
+#+LATEX_HEADER_EXTRA: \usepackage{listings}
+#+LATEX_HEADER_EXTRA: \usepackage{xcolor}
+#+LATEX_HEADER_EXTRA: \usepackage{lstmaple}
+
+This document demonstrates simple listings typesetting of Maple org-babel source blocks.
+
+Currently only rudimentary commands are supported. If you improve on the lstmaple.sty, consider contributing it back.
+
+**Version 0.1**
+
+The package is currently under development.
+
+
+* Requirements
+
+- lstmaple.sty provided with ob-maple, should be placed in a folder in the LaTeX search path.
+
+- src-backend must be set to =listings=
+#+begin_src emacs-lisp
+  (setq org-latex-src-block-backend 'listings)
+#+end_src
+
+- add ~listings~, ~xcolor~ and ~lstmaple~ packages to LaTeX header
+  - Can locally be set as ~#+LATEX_HEADER_EXTRA:~
+  - Or globally in Emacs configurations as e.g.:
+
+#+begin_src emacs-lisp :results silent
+  (setq org-latex-src-block-backend 'listings)
+  (add-to-list 'org-latex-packages-alist '("" "listings" nil))
+  (add-to-list 'org-latex-packages-alist '("" "xcolor"   nil))
+  (add-to-list 'org-latex-packages-alist '("" "lstmaple"   nil))
+  (setq org-latex-listings-options
+        '(("frame"           "single")
+          ("framesep"        "4pt")
+          ("basicstyle"      "\\ttfamily\\small")
+          ("backgroundcolor" "\\color{gray!8}")
+          ("keywordstyle"    "\\color{blue!70!black}\\bfseries")
+          ("commentstyle"    "\\color{green!50!black}\\itshape")
+          ("stringstyle"     "\\color{red!70!black}")
+          ("numbers"         "left")
+          ("numberstyle"     "\\tiny\\color{gray}")
+          ("breaklines"      "true")
+          ("showstringspaces" "false")
+          ("captionpos"      "b")))
+#+end_src
+
+
+#+latex: \pagebreak
+
+* Example
+
+Just a short exampel
+
+#+begin_src maple :results value :exports both
+  # First N Fibonacci numbers, iterative
+  fib := proc(N::posint)
+      description "Return the first N Fibonacci numbers";
+      local F, k;
+      F := Array(1..N, fill = 1);
+      for k from 3 to N do
+          F[k] := F[k-1] + F[k-2];
+      end do;
+      return convert(F, list);
+  end proc:
+
+  fib(10);
+#+end_src
+
+#+RESULTS:
+: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+

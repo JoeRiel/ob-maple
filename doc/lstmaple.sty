@@ -1,0 +1,22 @@
+\ProvidesPackage{lstmaple}[Minimal Maple language for listings]
+\RequirePackage{listings}
+\lstdefinelanguage{maple}{
+  morekeywords={if,then,elif,else,fi,do,od,end,while,for,from,to,by,in,
+    proc,local,global,return,option,options,description,
+    module,use,uses,export,unprotect,protect,restart,quit,done,
+    break,next,error,try,catch,finally,
+    and,or,not,xor,implies,union,intersect,minus,subset,
+    true,false,FAIL},
+  morekeywords=[2]{solve,diff,int,Int,simplify,expand,factor,evalf,subs,
+    plot,plot3d,plots,plottools,DEtools,LinearAlgebra,Optimization,
+    sqrt,sin,cos,tan,sec,csc,cot,exp,ln,log,abs,Re,Im,conjugate,
+    arcsin,arccos,arctan,sinh,cosh,tanh,
+    sum,Sum,product,Product,limit,Limit,series,
+    map,seq,add,mul,nops,op,select,remove,
+    Matrix,Vector,Array,with,print,lprint,read,save,
+    Pi,infinity,I,gamma},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]`,
+}

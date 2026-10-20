@@ -6,7 +6,7 @@
 ;;         Bo Jakobsen <boj@boj.dk>
 ;; Keywords: languages, tools
 ;; Version: 1.0.0
-;; Package-Requires: ((maplev "3.2.0"))
+;; Package-Requires: ((maplev "3.2.5"))
 ;; URL: https://github.com/JoeRiel/ob-maple
 
 ;;; License:
@@ -38,7 +38,8 @@
 (require 'ob-comint)
 (require 'ob-eval)
 (require 'cl-lib)
-;; (require 'maplev)
+(require 'eieio)
+(require 'maplev)
 
 (declare-function maplev-config "maplev-config")
 (declare-function maplev--pmaple-buffer "maplev-pmaple")
@@ -48,19 +49,57 @@
 (defvar maplev-config)
 (defvar maplev-pmaple-prompt)
 
-(defvar org-src-lang-modes)
-(add-to-list 'org-src-lang-modes '("maple" . maplev))
+(defvar org-src-lang-modes)         ; updated in .emacs
+(defvar org-babel-tangle-lang-exts) ; updated in .emacs
 
-(defvar org-babel-tangle-lang-exts)
-(add-to-list 'org-babel-tangle-lang-exts '("maple" . "mpl"))
+(defcustom org-babel-maple-command nil
+  "Shell command used for one-shot (non-session) Maple evaluation.
+When nil (the default), the command is built by
+`org-babel-maple--command' from the `:maple' slot of
+`maplev-config-default' (the same executable session evaluation
+uses), falling back to \"maple\" on the PATH, followed by
+`org-babel-maple-command-options'.  Set this to a string to use an
+explicit command instead."
+  :group 'org-babel
+  :group 'maplev
+  :type '(choice (const :tag "From maplev-config-default" nil)
+                 (string :tag "Command")))
 
-(defcustom org-babel-maple-command
-  "maple2025 -q -B -c 'interface(prettyprint=0)'"
-  "String used to execute Maple code.
-The command (maple) should be the installed name of command-line Maple."
+(defcustom org-babel-maple-command-options
+  "-q -B -c 'interface(prettyprint=0)'"
+  "Options appended to the Maple executable for one-shot evaluation.
+Used only when `org-babel-maple-command' is nil.  `prettyprint=0'
+makes Maple print 1D output, which is what Org expects in results."
   :group 'org-babel
   :group 'maplev
   :type 'string)
+
+(defvar maplev-config-default)
+
+(defun org-babel-maple--command ()
+  "Return the shell command for one-shot Maple evaluation.
+See `org-babel-maple-command'."
+  (or org-babel-maple-command
+      (let ((maple (or (and (boundp 'maplev-config-default)
+                            maplev-config-default
+                            (ignore-errors
+                              (eieio-oref maplev-config-default 'maple)))
+                       "maple")))
+        (concat (shell-quote-argument maple) " "
+                org-babel-maple-command-options))))
+
+(defcustom org-babel-maple-session-init "interface(prettyprint=0):"
+  "Maple code sent once to each pmaple process used for session evaluation.
+It is sent after Maple has booted, i.e. after `maplev:-Setup' (which
+forces `prettyprint=1', 2D character output).  That is why passing
+`-c interface(prettyprint=0)' through the `:maple-options' slot of
+the maplev config does not help: Setup runs later and overrides it.
+The default restores 1D output, which is what Org expects in results.
+Set to nil or \"\" to send nothing."
+  :group 'org-babel
+  :group 'maplev
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Maple code")))
 
 (defcustom org-babel-maple-mode 'maplev-mode
   "Mode for use in running Maple interactively."
@@ -107,7 +146,7 @@ instead of replacing.)  See `org-babel-maple--maybe-latex'."
           ;; One-shot evaluation: span a fresh Maple for this block.
           (progn
             (org-babel-eval
-             org-babel-maple-command
+             (org-babel-maple--command)
              (org-babel-maple--graphics-body body params graphics-file))
             graphics-file)
         (org-babel-maple--evaluate-session-graphics
@@ -119,7 +158,7 @@ instead of replacing.)  See `org-babel-maple--maybe-latex'."
       (org-babel-maple--maybe-latex
        (if (or (null session) (string= "none" session))
            ;; One-shot evaluation: spawn a fresh Maple for this block.
-           (org-babel-eval org-babel-maple-command
+           (org-babel-eval (org-babel-maple--command)
                            (org-babel-expand-body:maple body params))
          ;; Session evaluation: reuse the maplev pmaple REPL.
          (org-babel-maple--evaluate-session
@@ -251,7 +290,23 @@ The session reuses the maplev pmaple machinery via
           ;; first `maplev-pmaple-direct' capture region, desynchronizing
           ;; output.
           (org-babel-maple--wait-for-prompt buffer)
+          (org-babel-maple--maybe-init-session buffer)
           buffer)))))
+
+(defun org-babel-maple--maybe-init-session (buffer)
+  "Send `org-babel-maple-session-init' to the pmaple process in BUFFER once.
+The flag is stored on the process itself, so a restarted Maple (new
+process, same buffer) is initialized again, and a buffer first started
+with \\[pmaple] is initialized on its first use from Org.  Must be
+called inside `org-babel-maple--with-session-buffer' for BUFFER."
+  (let ((proc (get-buffer-process buffer)))
+    (when (and proc
+               (not (process-get proc 'org-babel-maple-initialized))
+               org-babel-maple-session-init
+               (not (string-empty-p org-babel-maple-session-init)))
+      (with-current-buffer buffer
+        (maplev-pmaple-direct org-babel-maple-session-init))
+      (process-put proc 'org-babel-maple-initialized t))))
 
 (defun org-babel-maple--wait-for-prompt (buffer &optional timeout)
   "Block until the pmaple process in BUFFER is idle at a fresh prompt.
@@ -370,7 +425,7 @@ If BUFNAME is nil, remove it from the alist."
   "Return the list of sessions in `org-babel-maple--session-alist'."
   (mapcar #'car org-babel-maple--session-alist))
 
-(defun org-babel-maple--kill-session (session)
+(defun org-babel-maple-kill-session (session)
   "Kill SESSION, along with its assocated process and buffer.
 Query for SESSION."
   (interactive (list (completing-read "Choose session: " (org-babel-maple--get-sessions)
@@ -382,21 +437,11 @@ Query for SESSION."
         (kill-buffer bufname)
         (setq org-babel-maple--session-alist (assoc-delete-all session org-babel-maple--session-alist))))))
 
-(defun org-babel-maple--kill-all-sessions ()
+(defun org-babel-maple-kill-all-sessions ()
   "Kill all sessions."
   (interactive)
   (dolist (element org-babel-maple--session-alist)
-    (org-babel-maple--kill-session (car element))))
-
-;; Bind a few keys
-
-;; These work, but not sure the choices.  They don't conflict with the
-;; standard org-babel-map.  I'd rather bind k to
-;; org-babel-maple--kill-session (k means kill one, K means kill all)
-;; but currently k is bound to org-babel-remove-result-one-or-many.
-
-(define-key org-babel-map (kbd "S") 'org-babel-maple--kill-session)
-(define-key org-babel-map (kbd "K") 'org-babel-maple--kill-all-sessions)
+    (org-babel-maple-kill-session (car element))))
 
 (provide 'ob-maple)
 

@@ -1,0 +1,178 @@
+#+title: Ob-maple org-babel demo document: Basic org-babel use
+#+date: <2026-10-17 Sat>
+#+email: boj@boj.dk
+#+author: Bo Jakobsen
+#+LATEX_HEADER: \usepackage{maple}
+
+This is a demo org / org-babel document, showing (some of) the
+features in the ob-maple org-babel language package.
+
+**Version 1.0**
+
+The package is currently under development.
+
+* Standard Maple interaction
+
+Individual blocks are evaluated in a new Maple instance.
+
+#+begin_src maple :results value
+p := 3;
+q := p^4;
+#+end_src
+
+#+RESULTS:
+: 81
+
+#+begin_src maple :results value
+q;
+#+end_src
+
+#+RESULTS:
+: q
+
+Output is set to 1D output, which is what org-mode expects.
+#+begin_src maple :results output
+  q := p^a;
+#+end_src
+
+#+RESULTS:
+: q := p^a
+
+* :results options
+
+=value= output from last evaluated statement is given as result.
+
+#+begin_src maple :results value
+p := 3;
+q := p^4;
+#+end_src
+
+#+RESULTS:
+: 81
+
+=output= all "printed" results are given as result, suppress unwanted output with ":".
+
+#+begin_src maple :results output
+  a := 2:
+  p := 3;
+  q := p^a;
+#+end_src
+
+#+RESULTS:
+: p := 3
+: q := 9
+
+
+* Session support
+
+The :session parameter uses a string to identify a Maple kernel, which is shared between all blocks sharing same session. Evaluation is faster, as Maple does not have to start each time.
+
+Notice that if an empty string is given as session name the common `pmaple' session is used, and forced to use 1D math.
+
+Only =:result value= is not supported and is ignored.
+
+#+begin_src maple :session foo
+p := 10;
+#+end_src
+
+#+RESULTS:
+: p := 10
+
+#+begin_src maple :session foo :results output
+q := p^2;   # remembers p from the previous block
+#+end_src
+
+#+RESULTS:
+: q := 100
+
+#+begin_src maple :session foo
+int(q*x,x);   # remembers p from the previous block
+#+end_src
+
+#+RESULTS:
+: 50*x^2
+
+=:result value= is ignored
+#+begin_src maple :session foo :result value
+  4+4;
+  int(q*x,x);   # remembers p from the previous block
+#+end_src
+
+#+RESULTS:
+: 8
+: 50*x^2
+
+* Inline graphics generation and inclusion
+
+Last command in a block needs to be the plot (or a variable contain a plot).
+Both session and non-session blocks are supported.
+
+#+begin_src maple :session plt :results graphics file :file sine.png :width 400 :height 200
+plot(sin(3*x), x = 0..2*Pi):
+#+end_src
+
+#+RESULTS:
+[[file:sine.png]]
+
+
+
+#+begin_src maple :results graphics file :file sine2.png
+plt := plot(sin(3*x), x = 0..2*Pi):
+plt;
+#+end_src
+
+#+RESULTS:
+[[file:sine2.png]]
+
+
+
+* Latex output
+
+Optional =:latex yes= option, captures latex from last output
+=:results output drawer= is needed.
+
+For simple output no extra packages are needed.
+
+#+begin_src maple :session foo :results output drawer :latex yes
+f := a*x^2 + d:
+latex(f);
+#+end_src
+
+#+RESULTS:
+:results:
+\[a \,x^{2}+d\]
+:end:
+
+
+#+begin_src maple :session foo :results output drawer :latex yes
+f := int(g(x),x):
+latex(f);
+#+end_src
+
+#+RESULTS:
+:results:
+\[\int g \! \left(x \right)d x\]
+:end:
+
+
+For more advanced output include the =maple.sty= file found in "etc" directory
+or our  maple install. This needs to be copied to somewhere on the LaTeX path, and included in the org-LaTeX generation, as eq. by the header show in the top of this file.
+
+#+begin_src maple :session foo :results output drawer :latex yes
+latex(Int(1/(x^2+1), x));
+#+end_src
+
+#+RESULTS:
+:results:
+\[\textcolor{gray}{\int}\frac{1}{x^{2}+1}\textcolor{gray}{d}x\]
+:end:
+
+#+begin_src maple :session foo :results output drawer :latex yes
+latex(Product(k, k = 1..n));
+#+end_src
+
+#+RESULTS:
+:results:
+\[\moverset{n}{\munderset{k =1}{\textcolor{gray}{\prod}}}\! k\]
+:end:
+
