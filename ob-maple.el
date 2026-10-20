@@ -5,7 +5,7 @@
 ;; Author: Joseph S. Riel <joer@san.rr.com>
 ;;         Bo Jakobsen <boj@boj.dk>
 ;; Keywords: languages, tools
-;; Version: 1.0.0
+;; Version: 0.1.0
 ;; Package-Requires: ((maplev "3.2.5"))
 ;; URL: https://github.com/JoeRiel/ob-maple
 
@@ -51,6 +51,9 @@
 
 (defvar org-src-lang-modes)         ; updated in .emacs
 (defvar org-babel-tangle-lang-exts) ; updated in .emacs
+
+(defconst ob-babel-maple-version "0.1.0"
+  "The current version of the Org Maple package.")
 
 (defcustom org-babel-maple-command nil
   "Shell command used for one-shot (non-session) Maple evaluation.
