@@ -3,7 +3,7 @@
 ob-maple.el an Org Babel mode for Maple integration
 ===================================================
 
-**Version 1.0**
+**Version 0.1**
 
 This package contains Org Babel [1] functions for in-line Maple [2] evaluation in Org Babel notebooks.
 
